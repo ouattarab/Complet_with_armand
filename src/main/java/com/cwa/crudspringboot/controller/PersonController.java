@@ -1,50 +1,49 @@
-package com.cwa.crudspringboot;
+package com.cwa.crudspringboot.controller;
 
+import com.cwa.crudspringboot.entity.Person;
+import com.cwa.crudspringboot.service.PersonService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.Objects;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/persons")
 public class PersonController {
 
-    final PersonRepository personRepository;
-
-    public PersonController(PersonRepository personRepository) {
-        this.personRepository = personRepository;
-    }
+    private final PersonService personService;
 
     @GetMapping
     public ResponseEntity<List<Person>> getAllPersons() {
-        return new ResponseEntity<>(personRepository.findAll(), HttpStatus.OK);
+        return new ResponseEntity<>(personService.findAll(), HttpStatus.OK);
     }
 
     @PostMapping
     public ResponseEntity<Person> createPerson(@RequestBody Person person) {
-        Person personCreated = personRepository.save(person);
+        Person personCreated = personService.saveOrUpdate(person);
         return new ResponseEntity<>(personCreated, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Person> getPersonById(@PathVariable Long id) {
-        Optional<Person> person = personRepository.findById(id);
+        Person person = personService.findById(id);
 
-        return person.map(value -> new ResponseEntity<>(value, HttpStatus.OK)).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return Objects.nonNull(person) ? new ResponseEntity<>(person, HttpStatus.OK) : new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<Person> updatePerson(@PathVariable Long id, @RequestBody Person personDetails) {
-        Optional<Person> person = personRepository.findById(id);
+        Person existingPerson = personService.findById(id);
 
-        if (person.isPresent()) {
-            Person existingPerson = person.get();
+        if (Objects.nonNull(existingPerson)) {
             existingPerson.setCity(personDetails.getCity());
             existingPerson.setPhoneNumber(personDetails.getPhoneNumber());
 
-            Person updatedPerson = personRepository.save(existingPerson);
+            Person updatedPerson = personService.saveOrUpdate(existingPerson);
             return new ResponseEntity<>(updatedPerson, HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -52,10 +51,10 @@ public class PersonController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePerson(@PathVariable Long id) {
-        Optional<Person> person = personRepository.findById(id);
+        Person person = personService.findById(id);
 
-        if (person.isPresent()) {
-            personRepository.delete(person.get());
+        if (Objects.nonNull(person)) {
+            personService.deleteById(id);
             return new ResponseEntity<>(HttpStatus.OK);
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
