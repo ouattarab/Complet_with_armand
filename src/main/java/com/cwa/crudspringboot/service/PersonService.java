@@ -14,6 +14,7 @@ public class PersonService {
     private final PersonRepository personRepository;
 
     public List<Person> findAll() {
+
         return personRepository.findAll();
     }
 
