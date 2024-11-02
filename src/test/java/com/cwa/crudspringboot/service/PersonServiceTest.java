@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 //@SpringBootTest
@@ -46,4 +47,17 @@ class PersonServiceTest {
         assertThat(person).isEqualTo(p);
     }
 
+    @Test
+    void shouldReturnPersonSaveOrUpdate() {
+        Person p = new Person(1L,"John Doe","New York","123-456-7890");
+        when(personRepository.save(p)).thenReturn(p);
+        Person person = personService.saveOrUpdate(p);
+        assertThat(person).isEqualTo(p);
+    }
+    @Test
+    void shouldDeletePerson() {
+        personService.deleteById(1L);
+
+        verify(personRepository).deleteById(1L);
+    }
 }
