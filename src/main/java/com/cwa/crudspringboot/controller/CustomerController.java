@@ -26,7 +26,7 @@ public class CustomerController {
         Customer customerCreated = customerService.saveOrUpdateCustomer(customer);
         return new ResponseEntity<>(customerCreated, HttpStatus.CREATED);
     }
-    @GetMapping("{/id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Customer> getCustomerById(@PathVariable Long id) {
         Customer customer=customerService.findCustomerById(id);
 
