@@ -21,6 +21,8 @@ public class Person {
     private String name;
     private String city;
     private String phoneNumber;
+    private String email;
+    private Long age;
 
   //  @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequence_generator") // ✅ Nouvelle séquence pour "sequence"
 // @SequenceGenerator(name = "sequence_generator", sequenceName = "SEQUENCE_PERSON", allocationSize = 1)

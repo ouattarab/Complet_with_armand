@@ -13,6 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/persons")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200") // Autorise Angular à appeler cette API
 public class PersonController {
 
     private final PersonService personService;
