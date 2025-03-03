@@ -16,20 +16,22 @@ public class PersonDaoImpl implements PersonDao {
     private EntityManager entityManager;
 
     @Override
-    @Transactional
-    public void executerProcedure() {
-        try {
-            log.info("✅ Exécution de la procédure stockée...");
+    public void executerMergeEmployeesProcedure() {
+        executeProcedure("MERGE_EMPLOYEES");
+    }
 
-            // Création de la requête pour exécuter la procédure stockée
-            StoredProcedureQuery query = entityManager.createStoredProcedureQuery("nom_de_ta_procedure");
+    @Override
+    public void executerMergeEmployeesCopyProcedure() {
+        executeProcedure("MERGE_EMPLOYEEScopy");
+    }
 
-            // Exécution de la procédure
-            query.execute();
+    private void executeProcedure(String procedureName) {
+        StoredProcedureQuery query = entityManager.createStoredProcedureQuery(procedureName);
+        query.registerStoredProcedureParameter("p_result", void.class); // Paramètre OUT
 
-            log.info("✅ Procédure stockée exécutée avec succès !");
-        } catch (Exception e) {
-            log.error("❌ Erreur lors de l'exécution de la procédure stockée : ", e);
-        }
+        query.execute();
+
+        Object result = query.getSingleResult();
+        System.out.println("Résultat de la procédure " + procedureName + " : " + result);
     }
 }

@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface PersonService {
     List<Person> savePersons(PersonRequestDTO personRequestDTO);
+
+    List<Person> getAllPersons();
 }

@@ -21,6 +21,11 @@ public class PersonServiceImpl implements PersonService {
     private final PersonDao personDao; // Ajout du DAO
 
     @Override
+    public List<Person> getAllPersons() {
+        return personRepository.findAll();
+    }
+
+    @Override
     @Transactional
     public List<Person> savePersons(PersonRequestDTO personRequestDTO) {
         // Générer une séquence unique pour toutes les personnes de la liste
@@ -47,10 +52,23 @@ public class PersonServiceImpl implements PersonService {
                 .collect(Collectors.toList());
 
         // ✅ Appeler la procédure stockée après l'enregistrement
-        personRepository.executerProcedure();
+      //  personRepository.executerProcedure();
         //ou
         // ✅ Appel de la procédure stockée via PersonDaoImpl
-        personDao.executerProcedure();
+       // personDao.executerProcedure();
+
+        // ✅ Déterminer quelle(s) PS exécuter selon la présence de l'email
+        boolean hasNullEmail = savedPersons.stream().anyMatch(person -> person.getEmail() == null);
+
+        if (hasNullEmail) {
+            // S'il y a au moins un email null
+            personDao.executerMergeEmployeesCopyProcedure();
+            personDao.executerMergeEmployeesProcedure();
+        } else {
+            // Sinon
+            personDao.executerMergeEmployeesProcedure();
+        }
+
         return personRepository.saveAll(persons);
     }
 

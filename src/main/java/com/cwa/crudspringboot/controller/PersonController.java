@@ -18,6 +18,12 @@ public class PersonController {
 
     private final PersonService personService;
 
+    @GetMapping("/persons")
+    public ResponseEntity<List<Person>> getAllPersons() {
+        List<Person> persons = personService.getAllPersons();
+        return new ResponseEntity<>(persons, HttpStatus.OK);
+    }
+
     @PostMapping("/batch")
     public ResponseEntity<List<Person>> savePersons(@RequestBody PersonRequestDTO personRequestDTO) {
         List<Person> savedPersons = personService.savePersons(personRequestDTO);
