@@ -50,22 +50,18 @@ public class PersonServiceImpl implements PersonService {
                         .build())
                 .filter(person -> personRepository.findByPhoneNumberAndSequence(person.getPhoneNumber(), person.getSequence()).isEmpty())
                 .collect(Collectors.toList());
+        // Sauvegarde en base
+        List<Person> savedPersons = personRepository.saveAll(persons);
 
-        // ✅ Appeler la procédure stockée après l'enregistrement
-      //  personRepository.executerProcedure();
-        //ou
-        // ✅ Appel de la procédure stockée via PersonDaoImpl
-       // personDao.executerProcedure();
-
-        // ✅ Déterminer quelle(s) PS exécuter selon la présence de l'email
+        // ✅ Déterminer quelle(s) procédure(s) stockée(s) exécuter selon la présence de l'email
         boolean hasNullEmail = savedPersons.stream().anyMatch(person -> person.getEmail() == null);
 
         if (hasNullEmail) {
-            // S'il y a au moins un email null
+            // S'il y a au moins un email null, on exécute les deux PS
             personDao.executerMergeEmployeesCopyProcedure();
             personDao.executerMergeEmployeesProcedure();
         } else {
-            // Sinon
+            // Sinon, on exécute seulement MERGE_EMPLOYEES
             personDao.executerMergeEmployeesProcedure();
         }
 
