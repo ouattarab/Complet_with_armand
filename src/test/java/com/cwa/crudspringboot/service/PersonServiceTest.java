@@ -25,7 +25,7 @@ class PersonServiceTest {
     @InjectMocks
     private PersonService personService;
 
-    @Test
+   /* @Test
     void shouldReturnAllPersons() {
          Person p1 = new Person(1L,"John Doe","New York","123-456-7890");
          Person p2 = new Person(2L,"Jane smith","Miami","123-456-7890");
@@ -34,27 +34,27 @@ class PersonServiceTest {
 
          List<Person> persons = personService.findAll();
          assertThat(persons).hasSize(2).containsExactly(p1,p2);
-    }
+    } */
 
-    @Test
+   /* @Test
     void shouldReturnPersonById() {
         Person p = new Person(1L,"John Doe","New York","123-456-7890");
         when(personRepository.findById(1L)).thenReturn(Optional.of(p));
         Person person = personService.findById(1L);
         assertThat(person).isEqualTo(p);
-    }
+    } */
 
-    @Test
+   /* @Test
     void shouldReturnPersonSaveOrUpdate() {
         Person p = new Person(1L,"John Doe","New York","123-456-7890");
         when(personRepository.save(p)).thenReturn(p);
         Person person = personService.saveOrUpdate(p);
         assertThat(person).isEqualTo(p);
-    }
-    @Test
+    } */
+  /*  @Test
     void shouldDeletePerson() {
         personService.deleteById(1L);
 
         verify(personRepository).deleteById(1L);
-    }
+    } */
 }

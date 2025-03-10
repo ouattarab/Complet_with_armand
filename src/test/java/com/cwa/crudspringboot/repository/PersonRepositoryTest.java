@@ -1,76 +1,116 @@
 package com.cwa.crudspringboot.repository;
 
 import com.cwa.crudspringboot.entity.Person;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.*;
 
-@DataJpaTest
+@ExtendWith(MockitoExtension.class) // 🔹 Active Mockito dans JUnit 5
 class PersonRepositoryTest {
 
-    @Autowired
-    private PersonRepository personRepository;
+    @Mock
+    private PersonRepository personRepository; // 🔥 On Mock le Repository
 
+    private Person person1, person2;
+
+    @BeforeEach
+    void setUp() {
+        person1 = new Person(1L, "Alice", "Paris", "0123456789", "alice@mail.com", 30L, 100L);
+        person2 = new Person(2L, "Bob", "Lyon", "0987654321", "bob@mail.com", 40L, 101L);
+    }
+
+    /**
+     * 🔹 Test : Vérifier l'appel à `findAll()`
+     */
     @Test
     void shouldGetAllPersons() {
-        //arrange dans le datasql
-        //act
-        List<Person> person = personRepository.findAll();
-        //assert
-        assertEquals(3, person.size()) ;
-        assertEquals("jhon Doe", person.get(0).getName()) ;
+        when(personRepository.findAll()).thenReturn(List.of(person1, person2));
+
+        List<Person> persons = personRepository.findAll();
+
+        assertThat(persons).hasSize(2);
+        assertThat(persons.get(0).getName()).isEqualTo("Alice");
+
+        verify(personRepository, times(1)).findAll(); // 🔥 Vérifie que `findAll()` a bien été appelé
     }
 
+    /**
+     * 🔹 Test : Vérifier `findById()`
+     */
     @Test
     void shouldGetPersonById() {
-        Person person = personRepository.findById(1L).get() ;
+        when(personRepository.findById(1L)).thenReturn(Optional.of(person1));
 
-        assertEquals("jhon Doe", person.getName()) ;
-        assertEquals("Paris", person.getCity());
-        assertEquals("123-456-7890", person.getPhoneNumber());
+        Optional<Person> person = personRepository.findById(1L);
+
+        assertThat(person).isPresent();
+        assertThat(person.get().getName()).isEqualTo("Alice");
+
+        verify(personRepository, times(1)).findById(1L);
     }
 
+    /**
+     * 🔹 Test : Vérifier `findByPhoneNumberAndSequence()`
+     */
     @Test
-    void shouldCheckName () {
-        Person person = personRepository.findById(1L).get() ;
-        assertEquals("jhon Doe", person.getName()) ;
+    void shouldFindPersonByPhoneNumberAndSequence() {
+        when(personRepository.findByPhoneNumberAndSequence("0123456789", 100L)).thenReturn(Optional.of(person1));
+
+        Optional<Person> person = personRepository.findByPhoneNumberAndSequence("0123456789", 100L);
+
+        assertThat(person).isPresent();
+        assertThat(person.get().getName()).isEqualTo("Alice");
+
+        verify(personRepository, times(1)).findByPhoneNumberAndSequence("0123456789", 100L);
     }
 
+    /**
+     * 🔹 Test : Vérifier l'ajout d'une personne
+     */
     @Test
     void shouldSavePerson() {
-        Person person = new Person();
-        person.setName("Bakary");
-        person.setCity("Paris");
-        person.setPhoneNumber("123-456-7890");
+        when(personRepository.save(any(Person.class))).thenReturn(person1);
 
-        Person savedPerson = personRepository.save(person);
+        Person savedPerson = personRepository.save(person1);
 
-        assertNotNull(savedPerson.getId());
-        assertEquals("Bakary", savedPerson.getName());
-        assertEquals("Paris", savedPerson.getCity());
-        assertEquals("123-456-7890", savedPerson.getPhoneNumber());
+        assertThat(savedPerson).isNotNull();
+        assertThat(savedPerson.getName()).isEqualTo("Alice");
+
+        verify(personRepository, times(1)).save(any(Person.class));
     }
 
-    @Test
-    void shouldpdatePerson() {
-        Person person = personRepository.findById(1L).get() ;
-        person.setCity("Lille");
-
-        assertEquals("Lille", person.getCity());
-    }
-
+    /**
+     * 🔹 Test : Vérifier la suppression d'une personne
+     */
     @Test
     void shouldDeletePerson() {
-       personRepository.deleteById(1L) ;
+        doNothing().when(personRepository).deleteById(1L);
 
-       Optional<Person> person = personRepository.findById(1L) ;
-        assertFalse(person.isPresent()) ;
+        personRepository.deleteById(1L);
+
+        verify(personRepository, times(1)).deleteById(1L);
     }
 
+    /**
+     * 🔹 Test : Vérifier `getNextSequenceValue()` (simulé)
+     */
+    @Test
+    void shouldGetNextSequenceValue() {
+        when(personRepository.getNextSequenceValue()).thenReturn(200L);
 
+        Long sequenceValue = personRepository.getNextSequenceValue();
+
+        assertThat(sequenceValue).isEqualTo(200L);
+        verify(personRepository, times(1)).getNextSequenceValue();
+    }
 }

@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Date;
+
 @Entity
 @Table(name = "employeecopy")
 @Data
@@ -28,7 +30,7 @@ public class Employeec {
     @Column(name = "PHONE_NUMBER")
     private String phone;
     @Column(name = "HIRE_DATE")
-    private String hireDate;
+    private Date hireDate;
     @Column(name = "JOB_ID")
     private String jobId;
     @Column(name = "SALARY")

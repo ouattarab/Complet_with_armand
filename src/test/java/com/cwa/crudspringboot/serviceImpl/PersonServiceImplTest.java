@@ -1,107 +1,109 @@
 package com.cwa.crudspringboot.serviceImpl;
 
+import com.cwa.crudspringboot.dao.PersonDao;
 import com.cwa.crudspringboot.dto.PersonDTO;
 import com.cwa.crudspringboot.dto.PersonRequestDTO;
 import com.cwa.crudspringboot.entity.Person;
 import com.cwa.crudspringboot.repository.PersonRepository;
-import com.cwa.crudspringboot.service.PersonService;
+import com.cwa.crudspringboot.serviceImpl.PersonServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(MockitoExtension.class) // 🔹 Active Mockito dans JUnit 5
 class PersonServiceImplTest {
 
     @Mock
     private PersonRepository personRepository;
 
+    @Mock
+    private PersonDao personDao;
+
     @InjectMocks
     private PersonServiceImpl personService;
 
-    private PersonRequestDTO personRequestDTO;
+    private PersonDTO personDTO1, personDTO2;
     private Person person1, person2;
+    private PersonRequestDTO personRequestDTO;
 
     @BeforeEach
     void setUp() {
-        // Créer des objets de test
-        person1 = Person.builder()
-                .name("Alice")
-                .city("Paris")
-                .phoneNumber("0123456789")
-                .email("alice@example.com")
-                .age(25L)
-                .sequence(1000L)
-                .build();
+        personDTO1 = new PersonDTO();
+        personDTO1.setName("Alice");
+        personDTO1.setCity("Paris");
+        personDTO1.setPhoneNumber("0123456789");
+        personDTO1.setEmail("alice@mail.com");
+        personDTO1.setAge(30L);
 
-        person2 = Person.builder()
-                .name("Bob")
-                .city("Lyon")
-                .phoneNumber("0987654321")
-                .email("bob@example.com")
-                .age(30L)
-                .sequence(1000L)
-                .build();
+        personDTO2 = new PersonDTO();
+        personDTO2.setName("Bob");
+        personDTO2.setCity("Lyon");
+        personDTO2.setPhoneNumber("0987654321");
+        personDTO2.setEmail("bob@mail.com");
+        personDTO2.setAge(40L);
 
-        // Créer un DTO avec une liste de personnes
-        personRequestDTO = new PersonRequestDTO();
-        personRequestDTO.setPersons(Arrays.asList(
-                new PersonDTO("Alice", "Paris", "0123456789", "alice@example.com", 25L),
-                new PersonDTO("Bob", "Lyon", "0987654321", "bob@example.com", 30L)
-        ));
+        personRequestDTO = new PersonRequestDTO(List.of(personDTO1, personDTO2));
     }
 
+    /**
+     * 🔹 Test : Vérifier `savePersonss()` en ajoutant des personnes
+     */
     @Test
-    void savePersons_ShouldSaveUniquePersons() {
-        // Mock : Simuler que ces personnes ne sont pas encore en base
-        when(personRepository.findByPhoneNumberAndSequence("0123456789", 1000L)).thenReturn(Optional.empty());
-        when(personRepository.findByPhoneNumberAndSequence("0987654321", 1000L)).thenReturn(Optional.empty());
+    void shouldSavePersons() {
+        // 🔹 Simuler la récupération de la séquence
+        when(personRepository.getNextSequenceValue()).thenReturn(100L, 101L);
 
-        // Mock : Simuler la sauvegarde des personnes
-        when(personRepository.saveAll(anyList())).thenReturn(Arrays.asList(person1, person2));
+        // 🔹 Simuler la conversion et le stockage des personnes
+        List<Person> personsToSave = personRequestDTO.getPersons().stream()
+                .map(dto -> {
+                    Person person = new Person();
+                    person.setName(dto.getName());
+                    person.setCity(dto.getCity());
+                    person.setPhoneNumber(dto.getPhoneNumber());
+                    person.setEmail(dto.getEmail());
+                    person.setAge(dto.getAge());
+                    person.setSequence(100L); // Simule une séquence
+                    return person;
+                })
+                .collect(Collectors.toList());
 
-        // Appel de la méthode à tester
-        List<Person> savedPersons = personService.savePersons(personRequestDTO);
+        // 🔹 Simuler la sauvegarde en base
+        when(personRepository.saveAll(anyList())).thenReturn(personsToSave);
 
-        // Vérifications
-        assertNotNull(savedPersons);
-        assertEquals(2, savedPersons.size());
-        assertEquals("Alice", savedPersons.get(0).getName());
-        assertEquals("Bob", savedPersons.get(1).getName());
+        // 🔥 Appeler la méthode à tester
+        List<PersonDTO> result = personService.savePersonss(personRequestDTO);
 
-        // Vérifier que `saveAll` a été appelé une seule fois
+        // ✅ Vérifications
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getName()).isEqualTo("Alice");
+        assertThat(result.get(1).getName()).isEqualTo("Bob");
+
         verify(personRepository, times(1)).saveAll(anyList());
+        verify(personRepository, times(1)).getNextSequenceValue();
     }
 
+    /**
+     * 🔹 Test : Vérifier que `savePersonss()` lève une exception si `PersonRequestDTO` est vide
+     */
     @Test
-    void savePersons_ShouldNotSaveDuplicates() {
-        // Simuler qu'un des utilisateurs existe déjà
-        when(personRepository.findByPhoneNumberAndSequence("0123456789", 1000L))
-                .thenReturn(Optional.of(person1)); // Déjà existant
-        when(personRepository.findByPhoneNumberAndSequence("0987654321", 1000L))
-                .thenReturn(Optional.empty()); // Pas encore en base
+    void shouldThrowExceptionWhenSavingEmptyList() {
+        PersonRequestDTO emptyRequestDTO = new PersonRequestDTO(List.of());
 
-        // Mock : Simuler la sauvegarde de Bob uniquement
-        when(personRepository.saveAll(anyList())).thenReturn(List.of(person2));
+        Exception exception = assertThrows(RuntimeException.class, () -> personService.savePersonss(emptyRequestDTO));
 
-        // Appel de la méthode à tester
-        List<Person> savedPersons = personService.savePersons(personRequestDTO);
+        assertThat(exception.getMessage()).isEqualTo("PersonRequestDTO must contain at least one person.");
 
-        // Vérifications
-        assertNotNull(savedPersons);
-        assertEquals(1, savedPersons.size()); // Un seul doit être sauvegardé (Bob)
-        assertEquals("Bob", savedPersons.get(0).getName());
-
-        // Vérifier que `saveAll` a été appelé une seule fois
-        verify(personRepository, times(1)).saveAll(anyList());
+        verify(personRepository, never()).saveAll(anyList());
     }
 }
