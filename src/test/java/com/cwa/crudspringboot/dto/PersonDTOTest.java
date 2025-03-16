@@ -1,11 +1,19 @@
 package com.cwa.crudspringboot.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.TestInstance;
+
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PersonDTOTest {
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     /**
      * 🔹 Vérifie que les getters et setters fonctionnent correctement
@@ -54,8 +62,6 @@ class PersonDTOTest {
      */
     @Test
     void testPersonDTOSerialization() throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper();
-
         PersonDTO person = new PersonDTO();
         person.setName("Alice");
         person.setCity("Paris");
@@ -71,8 +77,6 @@ class PersonDTOTest {
 
     @Test
     void testPersonDTODeserialization() throws Exception {
-        ObjectMapper objectMapper = new ObjectMapper();
-
         String json = "{\"name\":\"Alice\",\"city\":\"Paris\",\"phoneNumber\":\"0123456789\",\"email\":\"alice@mail.com\",\"age\":30}";
 
         PersonDTO person = objectMapper.readValue(json, PersonDTO.class);
@@ -96,9 +100,28 @@ class PersonDTOTest {
 
         PersonRequestDTO requestDTO = new PersonRequestDTO();
         requestDTO.setPersons(List.of(person1, person2));
+        requestDTO.setVariable1("var1");
+        requestDTO.setVariable2("var2");
 
         assertThat(requestDTO.getPersons()).hasSize(2);
         assertThat(requestDTO.getPersons().get(0).getName()).isEqualTo("Alice");
         assertThat(requestDTO.getPersons().get(1).getName()).isEqualTo("Bob");
+        assertThat(requestDTO.getVariable1()).isEqualTo("var1");
+        assertThat(requestDTO.getVariable2()).isEqualTo("var2");
+    }
+
+    /**
+     * 🔹 Vérifie que `toString()` est bien généré
+     */
+    @Test
+    void testPersonDTOToString() {
+        PersonDTO person = new PersonDTO();
+        person.setName("Alice");
+        person.setCity("Paris");
+
+        String toStringResult = person.toString();
+
+        assertThat(toStringResult).contains("Alice");
+        assertThat(toStringResult).contains("Paris");
     }
 }

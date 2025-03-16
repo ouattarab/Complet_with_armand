@@ -62,29 +62,25 @@ public class PersonServiceImpl implements PersonService {
         if (personRequestDTO.getPersons() == null || personRequestDTO.getPersons().isEmpty()) {
             throw new RuntimeException("PersonRequestDTO must contain at least one person.");
         }
-        // 🔹 Récupérer la valeur actuelle de la séquence
+
         Long sequenceValue = personRepository.getNextSequenceValue();
 
-        // Convertir chaque PersonDTO en entité Person
-       /* List<Person> personsToSave = personRequestDTO.getPersons().stream()
-                .map(this::mapToEntity)
-                .collect(Collectors.toList()); */
         List<Person> personsToSave = personRequestDTO.getPersons().stream()
                 .map(dto -> {
                     Person person = mapToEntity(dto);
-                    person.setSequence(sequenceValue); // 🔥 Incrémentation pour chaque personne
+                    person.setSequence(sequenceValue);
+
                     return person;
                 })
                 .collect(Collectors.toList());
 
-        // Sauvegarde en base
         List<Person> savedPersons = personRepository.saveAll(personsToSave);
 
-        // Convertir les entités sauvegardées en DTO
         return savedPersons.stream()
                 .map(this::mapToDTO)
                 .collect(Collectors.toList());
     }
+
 
 
 
